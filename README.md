@@ -1,0 +1,2 @@
+# FoodPlanner
+Kommandozeilenanwendung für Gerichtvorschläge
