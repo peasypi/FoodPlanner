@@ -7,4 +7,4 @@ Kommandozeilenanwendung für Gerichtsvorschläge
 1. Zuerst müssen die Requirements installiert werden
 `pip install -r requirements.txt`
 
-2. Dann kanns eigentlich schon losgehen, lol
+2. Dann kanns eigentlich mit `python3 food_planner.py` schon losgehen, lol
