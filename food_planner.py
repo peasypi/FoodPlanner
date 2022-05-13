@@ -169,7 +169,7 @@ def colorize(string, color):
 def main():
     os.system("clear")
     figlet = Figlet(font="banner")
-    with open("food_list.json") as file:
+    with open("food_dict.json") as file:
         food_dict = json.load(file)
     print(colorize(str(figlet.renderText("Food")), "y"))
     print(colorize(str(figlet.renderText("Planner")), "y"))
