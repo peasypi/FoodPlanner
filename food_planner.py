@@ -68,10 +68,10 @@ def schlagworte_register(food_dict: dict) -> None:
     length = len(food_dict["Gerichte"])
     for j in range(0, length):
         food_schlagworte = food_dict["Gerichte"][j]["schlagworte"]
-        s = s + food_schlagworte
-    schlagworte = list(set(s))
+        s += food_schlagworte
+    food_schlagworte = list(set(s))
     print("Das sind mögliche Schlagworte:")
-    pprint.pprint(sorted(schlagworte))
+    pprint.pprint(sorted(food_schlagworte))
 
 
 def erweiterte_suche(food_dict: dict, param):
@@ -80,17 +80,14 @@ def erweiterte_suche(food_dict: dict, param):
     length = len(food_dict["Gerichte"])
     for l in range(0, length):
         for p in parameter:
-            if p in food_dict["Gerichte"][l]["schlagworte"].lower():
+            if p in [x.lower() for x in food_dict["Gerichte"][l]["schlagworte"]]:
                 pos_dishes.append(food_dict["Gerichte"][l]["id"])
     ran = random.choice(pos_dishes)
-    for r in range(0, length):
-        food_id = food_dict["Gerichte"][r]["id"]
-        if food_id == ran:
-            answer = input("Wie wärs mit " + food_dict["Gerichte"][r]["name"] + " zum Abendbrot?")
-            if answer != "cool":
-                erweiterte_suche(food_dict, param)
-            else:
-                print("Super, guten Appetit!")
+    answer = input("Wie wärs mit " + food_dict["Gerichte"][ran - 1]["name"] + " zum Abendbrot?")
+    if answer != "cool":
+        erweiterte_suche(food_dict, param)
+    else:
+        print("Super, guten Appetit!")
 
 
 def get(food_dict: dict, food_names: list):
