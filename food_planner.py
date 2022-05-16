@@ -4,6 +4,7 @@ import os
 import pprint
 import random
 from difflib import SequenceMatcher
+from os.path import exists
 
 from pyfiglet import Figlet
 
@@ -12,16 +13,20 @@ def add_dish(food_dict: dict, food_names: list):
     # {"name": "Käse", "id": 31, "schlagworte": ""}
     dic = {"name": "", "id": 0, "schlagworte": []}
     name = input("Wie ist der Name des hinzuzufügenden Gerichts?\n")
+    if name.lower() == "exit":
+        return ()
     dic["name"] = name
     similar_dishes = get_similar_dishes(food_names, name)
     if len(similar_dishes) != 0:
         print(
             f"Es gibt mindestens ein Gericht mit einem ähnlichen Namen in deiner Datenbank. \nÄhnliche Gerichte:"
         )
-        for d in similar_dishes:
-            print(f'\t {colorize("•", "c")} {d}')
-        ant = input("Ist das Gericht, welches du gerade hinzufügen wolltest dabei? [Y/N]")
-        if ant.lower() == "y":
+        for dish in similar_dishes:
+            print(f'\t {colorize("•", "c")} {dish}')
+        ant = input("Ist das Gericht, welches du gerade hinzufügen wolltest dabei? [J/N]")
+        if ant.lower() == "exit":
+            return ()
+        if ant.lower() == "j":
             print(
                 "Alles klar, dann ignorier ich deine Anfrage zum Hinzufügen eines neuen Gerichts!"
             )
@@ -29,16 +34,20 @@ def add_dish(food_dict: dict, food_names: list):
             return ()
     dic["id"] = len(food_dict["Gerichte"]) + 1
     schlagworte = [x.strip() for x in input("Was sind die zugehörigen Schlagworte?\n").split(",")]
+    if "exit" in schlagworte:
+        return ()
     dic["schlagworte"] = schlagworte
     food_dict["Gerichte"].append(dic)
-    with open("food_dict.json", "w") as file:
+    with open("food_dict.json", "w+") as file:
         json.dump(food_dict, file, ensure_ascii=False, indent=4)
     add_one_more_dish(food_dict, food_names)
 
 
 def add_one_more_dish(food_dict: dict, food_names: list):
-    ant = input("Willst du ein weiteres Gericht hinzufügen? [Y/N]\n")
-    if ant.lower() == "y":
+    ant = input("Willst du ein weiteres Gericht hinzufügen? [J/N]\n")
+    if ant.lower() == "exit":
+        return ()
+    if ant.lower() == "j":
         add_dish(food_dict, food_names)
     else:
         print("Ok, tschau")
@@ -54,11 +63,13 @@ def get_similar_dishes(food_names: list, name: str) -> list:
     return similar_dishes
 
 
-def random_dish(food_dict: dict, food_names: list):
+def get_random_dish(food_dict: dict, food_names: list):
     end = len(food_dict["Gerichte"])
     answer = input(f"Wie wärs mit {random.choice(food_names)} zum Abendbrot?")
+    if answer.lower() == "exit":
+        return ()
     if answer != "cool":
-        random_dish(food_dict, food_names)
+        get_random_dish(food_dict, food_names)
     else:
         print("Super, guten Appetit!")
 
@@ -84,6 +95,8 @@ def erweiterte_suche(food_dict: dict, param):
                 pos_dishes.append(food_dict["Gerichte"][l]["id"])
     ran = random.choice(pos_dishes)
     answer = input("Wie wärs mit " + food_dict["Gerichte"][ran - 1]["name"] + " zum Abendbrot?")
+    if answer.lower() == "exit":
+        return ()
     if answer != "cool":
         erweiterte_suche(food_dict, param)
     else:
@@ -98,13 +111,17 @@ def get(food_dict: dict, food_names: list):
         food_names (list): _description_
     """
     ant2 = input(
-        "Willst du nur Gerichte mit bestimmten Schlagworten vorgeschlagen bekommen? [Y/N]\n"
+        "Willst du nur Gerichte mit bestimmten Schlagworten vorgeschlagen bekommen? [J/N]\n"
     )
+    if ant2.lower() == "exit":
+        return ()
     if ant2.lower() == "n":
-        random_dish(food_dict, food_names)
-    elif ant2.lower() == "y":
+        get_random_dish(food_dict, food_names)
+    elif ant2.lower() == "j":
         schlagworte_register(food_dict)
         param = input("Nach welchen Schlagworten möchtest du suchen?\n")
+        if param.lower() == "exit":
+            return ()
         erweiterte_suche(food_dict, param.lower())
     else:
         print("Das war leider keine gültige Antwort, versuchen wirs nochmal!")
@@ -119,12 +136,26 @@ def frage(food_dict: dict, food_names: list):
         food_names (list): list of food names
     """
     ant1 = input(
-        "Willst du etwas zu deiner Essensdatenbank hinzufügen oder etwas vorgeschlagen bekommen?\n(1) Add\n(2) Get\n"
+        "Willst du etwas zu deiner Essensdatenbank hinzufügen oder etwas vorgeschlagen bekommen?\n(1) Hinzufügen \n(2) Vorschlag \n(3) EXIT, bitte lass mich raus!\n"
     )
     if ant1.lower() == "get" or ant1 == "2":
-        get(food_dict, food_names)
+        if len(food_names) == 0:
+            print(
+                "Upsi, scheinbar hast du noch gar keine Gerichte in deiner Datenbank. Füge schnell welche hinzu!"
+            )
+            ant2 = input(
+                "Willst du jetzt direkt ein Gericht zu deiner Datenbank hinzufügen? [J/N]\n"
+            )
+            if ant2.lower() == "j":
+                add_dish(food_dict, food_names)
+            print(f"Na gut, {random.choice(liste_witziger_verabschiedungen)}!")
+        else:
+            get(food_dict, food_names)
     elif ant1.lower() == "add" or ant1 == "1":
         add_dish(food_dict, food_names)
+    elif ant1.lower() == "exit" or ant1 == "3":
+        print(colorize(f"{random.choice(liste_witziger_verabschiedungen)}!", "c"))
+        return ()
     else:
         print("Das war leider keine gültige Antwort, versuchen wirs nochmal!")
         frage(food_dict, food_names)
@@ -132,7 +163,7 @@ def frage(food_dict: dict, food_names: list):
 
 # Hilfsfunktionen
 def create_list_of_food_names(food_dict: dict) -> list:
-    """Create a list of all the food names from the dictionary for random_dish.
+    """Create a list of all the food names from the dictionary for get_random_dish.
 
     Args:
         food_dict (dict): dictionary with all foods
@@ -165,13 +196,55 @@ def colorize(string, color):
 
 def main():
     os.system("clear")
-    figlet = Figlet(font="banner")
-    with open("food_dict.json") as file:
-        food_dict = json.load(file)
-    print(colorize(str(figlet.renderText("Food")), "y"))
-    print(colorize(str(figlet.renderText("Planner")), "y"))
+    try:
+        with open("pyfigletfonts.txt") as f:
+            fonts = f.read().splitlines()
+        font = random.choice(fonts)
+    except FileNotFoundError:
+        font = "univers"
+    figlet = Figlet(font=font, width=800)
+    if exists("food_dict.json"):
+        with open("food_dict.json", "r") as file:
+            food_dict = json.load(file)
+    else:
+        food_dict = {"Gerichte": []}
+    print(
+        f'{colorize(str(figlet.renderText("FOOD")), "y")}'
+        + r"""                   _..----.._       
+                 .'     o    '.     
+                /   o       o  \   
+               |o        o     o|   
+               /'-.._o     __.-'\  
+               \      `````     /   
+               |``--........--'`|    
+                \              /
+                 `'----------'`
+"""
+    )
+    print(f'{colorize(str(figlet.renderText("PLANNER")), "c")}')
     food_names = create_list_of_food_names(food_dict)
     frage(food_dict, food_names)
 
 
-main()
+liste_witziger_verabschiedungen = [
+    # "Tschausenberger",
+    "Ciao Kakao",
+    # "Tschö mit ö",
+    # "Tschüssikowski",
+    # "Arrivischerzi",
+    "Bis Baldrian",
+    # "Bis denne, Antenne",
+    "Bis spätersilie",
+    "Bye Bye, Kartoffelbrei",
+    "Byesilikum",
+    # "Machs gut, Knut",
+    # "San Frantschüssko",
+    "Sayonara, Carbonara",
+    "Tschüsli Müsli",
+    "Wirsing, man sieht sich",
+]
+
+try:
+    main()
+except KeyboardInterrupt:
+    print(f"\nOk, dann nicht, {random.choice(liste_witziger_verabschiedungen)}")
